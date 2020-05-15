@@ -1,0 +1,132 @@
+@media only screen  and (min-width : 1224px) {
+    @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+
+    .area{
+      text-align:center;
+      font-size:6.5em;
+      font-family: 'Nunito', sans-serif;
+      color:#fff;
+      letter-spacing: -7px;
+      font-weight:700;
+      text-transform:uppercase;
+      animation:blur 2s ease-out infinite;
+      text-shadow:0px 0px 5px #fff,
+          0px 0px 7px #00B4F1;
+
+    }
+
+    @keyframes blur{
+      from{
+          text-shadow:0px 0px 10px #fff,
+          0px 0px 10px #fff,
+          0px 0px 25px #fff,
+          0px 0px 25px #fff,
+          0px 0px 25px #fff,
+          0px 0px 25px #fff,
+          0px 0px 25px #fff,
+          0px 0px 25px #fff,
+          0px 0px 50px #fff,
+          0px 0px 50px #fff,
+          0px 0px 50px #00B4F1,
+          0px 0px 150px #00B4F1,
+          0px 10px 100px #00B4F1,
+          0px 10px 100px #00B4F1,
+          0px 10px 100px #00B4F1,
+          0px 10px 100px #00B4F1,
+          0px -10px 100px #00B4F1,
+          0px -10px 100px #00B4F1;
+          }
+    }
+
+
+    body{
+      background: #F3DB8F;
+    }
+
+    h1{
+      color: #00B4F1;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    p{
+      text-align:center;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    h2{
+      color: #00B4F1;
+      text-align:center;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    img{
+      margin: 15px;
+      display: block;
+      margin: auto;
+      margin-bottom: 80px;
+      border-radius: 20px;
+    }
+
+    #iconoContacto{
+      width: 50px; height: 50px
+    }
+}
+
+@media only screen and (min-device-width : 320px) and (max-device-width : 600px) {
+
+    @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+
+    .area{
+      padding-top: 30%;
+      text-align:center;
+      font-size:6.5em;
+      font-family: 'Nunito', sans-serif;
+      color:#fff;
+      letter-spacing: -7px;
+      font-weight:700;
+      text-transform:uppercase;
+      text-shadow:0px 0px 5px #fff,
+          0px 0px 7px #00B4F1;
+    }
+
+    body{
+      background: #F3DB8F;
+    }
+
+    footer{
+        padding-bottom: 20%;
+    }
+
+    h1{
+      color: #00B4F1;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    p{
+      text-align: justify;
+      text-justify: inter-word;
+      font-family: 'Nunito', sans-serif;
+      padding-left: 8%;
+      padding-right: 8%;
+    }
+
+    h2{
+      color: #00B4F1;
+      text-align:center;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    img{
+      display: block;
+      margin: 0 auto;
+      margin-bottom: 30px;
+      margin-top: 10px;
+      border-radius: 20px;
+      width:80%;
+      height:80%;
+    }
+
+    #iconoContacto{
+      width: 50px; height: 50px
+    }
+}
