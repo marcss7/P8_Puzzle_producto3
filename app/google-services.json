@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "103234182095",
+    "firebase_url": "https://resolvers-e8ca8.firebaseio.com",
+    "project_id": "resolvers-e8ca8",
+    "storage_bucket": "resolvers-e8ca8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:103234182095:android:08faac0858e8bf4d0fd0ba",
+        "android_client_info": {
+          "package_name": "edu.uoc.resolvers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "103234182095-pbe5pqq1ooba5br7csm2if1cva57stti.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.uoc.resolvers",
+            "certificate_hash": "04bd0205d152aa3e9cdb52f802a4a70fdfd671ae"
+          }
+        },
+        {
+          "client_id": "103234182095-krkotjj8m0git68u0lqo3er3kd0l23ie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKIib8wRcahdkLeCv_zzhZFWp8QXSO5KE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "103234182095-krkotjj8m0git68u0lqo3er3kd0l23ie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
