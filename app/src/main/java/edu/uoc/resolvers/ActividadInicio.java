@@ -39,10 +39,18 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 
 /*
     Esta clase representa la pantalla de bienvenida.
@@ -50,16 +58,17 @@ import java.util.Date;
 public class ActividadInicio extends AppCompatActivity {
 
     HomeWatcher mHomeWatcher;
-    private String patronFecha = "dd/MM/yyyy";
-    private SimpleDateFormat sdf;
-    private String fechaActual;
     private int CALENDAR_PERMISSION_CODE = 1;
     private SignInButton signInButton;
     private GoogleSignInClient mGoogleSignInClient;
     private String TAG = "Actividad inicio";
     private FirebaseAuth mAuth;
     private Button signOutButton;
-    private int RC_SIGN_IN = 1;
+    private int RC_SIGN_IN = 2;
+    public static String givenName;
+    private DatabaseReference ref;
+    private TextView puntuaciones;
+    private ArrayList<Puntuacion> puntos = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,15 +106,22 @@ public class ActividadInicio extends AppCompatActivity {
 
         // Creamos el botón de inicio
         Button botonInicio = findViewById(R.id.botonInicio);
-        botonInicio.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                abrirActividadPrincipal();
-            }
-        });
+
+            botonInicio.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        abrirActividadPrincipal();
+                    } catch (Exception e) {
+                        Log.e("Inicio", e.getMessage());
+                    }
+
+                }
+            });
+
 
         // Creamos las puntuaciones
-        TextView puntuaciones = findViewById(R.id.puntuaciones);
+        puntuaciones = findViewById(R.id.puntuaciones);
 
         // Comprobamos si se han concedido los permisos de lectura y escritura en el Calendario.
         if (ContextCompat.checkSelfPermission(ActividadInicio.this, Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(ActividadInicio.this, Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
@@ -194,12 +210,8 @@ public class ActividadInicio extends AppCompatActivity {
         signOutButton.setVisibility(View.VISIBLE);
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
         if (account != null) {
-            String name = account.getDisplayName();
-            String givenName = account.getGivenName();
-            String familyName = account.getFamilyName();
-            String email = account.getEmail();
-            String id = account.getId();
-            Toast.makeText(ActividadInicio.this, name, Toast.LENGTH_SHORT).show();
+            givenName = account.getGivenName();
+            Toast.makeText(ActividadInicio.this, givenName, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -273,52 +285,51 @@ public class ActividadInicio extends AppCompatActivity {
     }
 
     // Este método permite obtener la máxima puntuaciones
-    // para cada nivel de las persistidas en el Calendario.
-    private void obtenerPuntuaciones(TextView puntuaciones) {
+    // para cada nivel de las persistidas en la base de datos de Firebase.
+    private void obtenerPuntuaciones(final TextView puntuaciones) {
         puntuaciones.append("");
 
-        for (int i = 0; i < 5; i++) {
-            ContentResolver contentResolver = getContentResolver();
-            Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
-
-            Calendar beginTime = Calendar.getInstance();
-            beginTime.set(2000, Calendar.JANUARY, 1, 0, 0);
-            long startMills = beginTime.getTimeInMillis();
-            long endMills = System.currentTimeMillis();
-
-            String titulo = "TR - ¡Nuevo récord N" + (i + 1) + "!";
-            ContentUris.appendId(builder, startMills);
-            ContentUris.appendId(builder, endMills);
-            String[] args = new String[]{"3", titulo};
-
-            // Seleccionamos del Calendario aquellas entradas que coinciden con las puntuaciones de nuestro juego
-            Cursor eventCursor = contentResolver.query(builder.build(), new String[]{CalendarContract.Instances.TITLE,
-                            CalendarContract.Instances.BEGIN, CalendarContract.Instances.END, CalendarContract.Instances.DESCRIPTION},
-                    CalendarContract.Instances.CALENDAR_ID + " = ? AND " + CalendarContract.Instances.TITLE + " = ?", args, null);
-
-            if (eventCursor.getCount() > 0) {
-                double min = Double.MAX_VALUE;
-                Date minDate = new Date();
-
-                while (eventCursor.moveToNext()) {
-                    final String title = eventCursor.getString(0);
-                    final Date begin = new Date(eventCursor.getLong(1));
-                    final Date end = new Date(eventCursor.getLong(2));
-                    final String description = eventCursor.getString(3);
-
-                    // Nos quedamos con la puntuación más baja
-                    if (Double.parseDouble(description.replace(",", ".")) < min) {
-                        min = Double.parseDouble(description.replace(",", "."));
-                        minDate = begin;
+        ref = FirebaseDatabase.getInstance().getReference();
+        ref.child("Records").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                puntos.clear();
+                int i;
+                double minTime = Double.MAX_VALUE;
+                for (i = 0; i < 5; i++) {
+                    Iterator<DataSnapshot> items = dataSnapshot.getChildren().iterator();
+                    String minName = null;
+                    String minDate = null;
+                    minTime = Double.MAX_VALUE;
+                    while (items.hasNext()) {
+                        DataSnapshot item = items.next();
+                        String nombre = item.child("nombre").getValue().toString();
+                        String fecha = item.child("fecha").getValue().toString();
+                        double tiempo = Double.parseDouble(item.child("tiempo").getValue().toString());
+                        int nivel = Integer.parseInt(item.child("nivel").getValue().toString());
+                        if (nivel == i + 1) {
+                            if (tiempo < minTime) {
+                                minTime = tiempo;
+                                minName = nombre;
+                                minDate = fecha;
+                            }
+                        }
+                    }
+                    Puntuacion p = new Puntuacion(minName, i + 1, minDate, minTime);
+                    if (minName != null) {
+                        puntos.add(p);
                     }
                 }
-
-                sdf = new SimpleDateFormat(patronFecha);
-                fechaActual = sdf.format(minDate);
-
-                puntuaciones.append((i + 1) + "     " + fechaActual + " " + String.format("%.2f", min).replace(".", ",") + "\n");
+                for (Puntuacion p : puntos) {
+                    puntuaciones.append(p.getNivel() + "     " + String.format("%-11s", p.getNombre()) + String.format("%10.2f", p.getTiempo()).replace(".", ",") + "\n");
+                }
             }
-        }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     // Este método hace que al hacer clic en el botón de inicio

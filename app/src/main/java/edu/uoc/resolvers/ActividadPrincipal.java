@@ -37,8 +37,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -67,6 +74,9 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     private Integer REQUEST_CAMERA = 1;
     File archivoFoto;
     Uri imagenUri = null;
+    DatabaseReference ref;
+    private Puntuacion puntuacion;
+    private long maxId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,6 +143,21 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
         // Empezamos a contar el tiempo
         tInicio = System.currentTimeMillis();
 
+        puntuacion = new Puntuacion();
+        ref = FirebaseDatabase.getInstance().getReference().child("Records");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists())
+                    maxId = (dataSnapshot.getChildrenCount());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         // Cuando se completa el puzzle
         pl.setOnCompleteCallback(new PuzzleLayout.OnCompleteCallback() {
             @Override
@@ -142,8 +167,23 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 tDelta = tFin - tInicio;
                 segTranscurridos = tDelta / 1000.0;
 
+                DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                Date date = new Date();
+                String strDate = dateFormat.format(date);
+
                 // Si se produce un récord añadimos el evento al calendario
                 agregarEventoCalendario(numCortes - 1, segTranscurridos);
+
+                if (ActividadInicio.givenName != null) {
+                    puntuacion.setNombre(ActividadInicio.givenName);
+                } else {
+                    puntuacion.setNombre("Anónimo");
+                }
+
+                puntuacion.setNivel(numCortes - 1);
+                puntuacion.setTiempo(segTranscurridos);
+                puntuacion.setFecha(strDate);
+                ref.child(String.valueOf(maxId + 1)).setValue(puntuacion);
 
                 // Mostramos mensaje al completar puzzle
                 Toast.makeText(ActividadPrincipal.this, "¡Bravo! Tu tiempo " + String.format("%.2f", segTranscurridos).replace(".", ",") + "s", Toast.LENGTH_SHORT).show();

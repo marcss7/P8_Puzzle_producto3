@@ -8,7 +8,7 @@
     <string name="aceptas_el_reto">¿Aceptas el reto?</string>
     <string name="titulo">TheResolvers</string>
     <string name="url_ayuda">file:///android_asset/Ayuda.html</string>
-    <string name="cabecera_puntos">Nivel Fecha \u0020\u0020\u0020\u0020\u0020Mejor t(s)</string>
+    <string name="cabecera_puntos">Nivel Jugador \u0020\u0020\u0020Mejor t(s)</string>
     <string name="channel_name">Superar récord</string>
     <string name="channel_description">Canal utilizado para enviar notificaciones cuando se rompen récords.</string>
 </resources>
