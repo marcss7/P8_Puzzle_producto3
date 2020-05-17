@@ -23,6 +23,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -32,16 +33,23 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +68,7 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     private PuzzleLayout pl;
     private int numCortes = 2;
     private int imagen;
+    //private int imagen = 1;
     private long tInicio, tFin, tDelta;
     private double segTranscurridos;
     private static final int SECOND_ACTIVITY_REQUEST_CODE = 0;
@@ -128,10 +137,12 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 cursor.close();
             }
             // Seleccionamos una de esas imágenes de manera aleatoria
-            imagen = seleccionarImagenAleatoria(imagenesDisponibles);
+            //imagen = seleccionarImagenAleatoria(imagenesDisponibles);
         }
 
         pl = findViewById(R.id.tablero_juego);
+
+        imagen = seleccionarImagenAleatoria();
 
         // Establecemos la imagen seleccionada como puzzle
         try {
@@ -319,12 +330,12 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     // Esté método selecciona aleatoriamente una imagen de entre
     // las que el usuario tiene almacenadas en el dispositivo y
     // comprueba que no se haya seleccionado previamente en esa partida.
-    private int seleccionarImagenAleatoria(ArrayList<Integer> imagenes) {
+    private int seleccionarImagenAleatoria() {
         Random rand = new Random();
-        int imagen = imagenes.get(rand.nextInt(imagenes.size()));
+        int imagen = rand.nextInt(5) + 1;
 
         while (imagenesUsadas.contains(imagen)) {
-            imagen = imagenes.get(rand.nextInt(imagenes.size()));
+            imagen = rand.nextInt(5) + 1;
         }
 
         imagenesUsadas.add(imagen);
@@ -574,7 +585,8 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     @Override
     public void run() {
         numCortes++;
-        imagen = seleccionarImagenAleatoria(imagenesDisponibles);
+        imagen = seleccionarImagenAleatoria();
+        //imagen++;
 
         // Si llegamos al último puzzle muestra el dialogo del fin del juego
         // Si no carga el siguiente puzzle
@@ -599,7 +611,9 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 numCortes = 2;
-                                imagen = seleccionarImagenAleatoria(imagenesDisponibles);
+                                imagenesUsadas.clear();
+                                imagen = seleccionarImagenAleatoria();
+                                //imagen = 1;
                                 try {
                                     pl.establecerImagen(imagen, numCortes);
                                 } catch (IOException e) {

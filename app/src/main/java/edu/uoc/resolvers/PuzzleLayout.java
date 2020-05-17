@@ -1,10 +1,13 @@
 package edu.uoc.resolvers;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -13,16 +16,39 @@ import android.os.Build;
 import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.customview.widget.ViewDragHelper;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.transition.Transition;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.annotations.Nullable;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+
+import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /*
     Esta clase nos permite especificar como se posicionan unas piezas
@@ -39,6 +65,11 @@ public class PuzzleLayout extends RelativeLayout {
     private int anchuraPieza;
     private int alturaPieza;
     private OnCompleteCallback occ;
+    FirebaseStorage firebaseStorage;
+    StorageReference storageReference;
+    StorageReference imageRef;
+    Bitmap my_image;
+    File localFile;
 
     public PuzzleLayout(Context context) {
         super(context);
@@ -237,30 +268,49 @@ public class PuzzleLayout extends RelativeLayout {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inDensity = dm.densityDpi;
 
-        // Obtenemos la imagen en función de su id de los recursos externos
-        ContentResolver cr = this.getContext().getContentResolver();
-        Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(idImagen));
-        Bitmap resource = MediaStore.Images.Media.getBitmap(cr, imageUri);
-        Bitmap bitmap = escalarImagen(resource, anchuraImagen, alturaImagen);
-        resource.recycle();
+        storageReference = FirebaseStorage.getInstance().getReference();
+        imageRef = storageReference.child("img_0" + idImagen + ".jpg");
 
-        anchuraPieza = anchuraImagen / numCortes;
-        alturaPieza = alturaImagen / numCortes;
 
-        for (int i = 0; i < numCortes; i++) {
-            for (int j = 0; j < numCortes; j++) {
-                ImageView iv = new ImageView(getContext());
-                iv.setScaleType(ImageView.ScaleType.FIT_XY);
-                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                lp.leftMargin = j * anchuraPieza;
-                lp.topMargin = i * alturaPieza;
-                iv.setLayoutParams(lp);
-                Bitmap b = Bitmap.createBitmap(bitmap, lp.leftMargin, lp.topMargin, anchuraPieza, alturaPieza);
-                iv.setImageBitmap(b);
-                addView(iv);
-            }
-        }
-        desordenarPiezas();
+                final File localFile = File.createTempFile("Images", "jpg");
+                FileDownloadTask task = imageRef.getFile(localFile);
+                task.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        my_image = BitmapFactory.decodeFile(localFile.getAbsolutePath());
+
+                        // Obtenemos la imagen en función de su id de los recursos externos
+                        //ContentResolver cr = this.getContext().getContentResolver();
+                        //Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(idImagen));
+                        //Bitmap resource = MediaStore.Images.Media.getBitmap(cr, imageUri);
+
+                        Bitmap bitmap = escalarImagen(my_image, anchuraImagen, alturaImagen);
+                        my_image.recycle();
+
+                        anchuraPieza = anchuraImagen / numCortes;
+                        alturaPieza = alturaImagen / numCortes;
+
+                        for (int i = 0; i < numCortes; i++) {
+                            for (int j = 0; j < numCortes; j++) {
+                                ImageView iv = new ImageView(getContext());
+                                iv.setScaleType(ImageView.ScaleType.FIT_XY);
+                                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                lp.leftMargin = j * anchuraPieza;
+                                lp.topMargin = i * alturaPieza;
+                                iv.setLayoutParams(lp);
+                                Bitmap b = Bitmap.createBitmap(bitmap, lp.leftMargin, lp.topMargin, anchuraPieza, alturaPieza);
+                                iv.setImageBitmap(b);
+                                addView(iv);
+                            }
+                        }
+                        desordenarPiezas();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getContext(), "Descarga fallida", Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     // Este método escala la imagen para adaptarla a la pantalla.
