@@ -2,16 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/ayuda"
-        android:title="Ayuda"
+        android:title="@string/ayuda"
         app:showAsAction="never" />
     <item android:id="@+id/camara"
-        android:title="Cámara"
+        android:title="@string/camara"
         app:showAsAction="never" />
     <item android:id="@+id/selector_musica"
-        android:title="Selector audio"
+        android:title="@string/selector_audio"
         app:showAsAction="never" />
     <item
         android:id="@+id/checkable_menu"
         android:checkable="true"
-        android:title="Sonido on/off" />
+        android:title="@string/sonido_on_off" />
 </menu>

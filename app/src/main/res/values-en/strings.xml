@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TheResolvers</string>
+    <string name="exito">You win!</string>
+    <string name="reiniciar">Play again?</string>
+    <string name="salir">Exit</string>
+    <string name="comenzar">Start</string>
+    <string name="ok">Ok</string>
+    <string name="aceptas_el_reto">Challenge accepted?</string>
+    <string name="titulo">TheResolvers</string>
+    <string name="url_ayuda">file:///android_asset/Ayuda.html</string>
+    <string name="cabecera_puntos">Level Player \u0020\u0020\u0020\u0020\u0020Best t(s)</string>
+    <string name="channel_name">Superar récord</string>
+    <string name="channel_description">Canal utilizado para enviar notificaciones cuando se rompen récords.</string>
+    <string name="msjPermisos">Must grant access</string>
+    <string name="msjCierreSesion">Loggred out</string>
+    <string name="msjBienvenida">Welcome</string>
+    <string name="authKo">Logging failed</string>
+    <string name="authOk">Logging correct</string>
+    <string name="anonimo">Anonymous</string>
+    <string name="bravo">Hurray! Your time </string>
+    <string name="record">Congratulations, you have set a new record!</string>
+    <string name="ayuda">Help</string>
+    <string name="camara">Camera</string>
+    <string name="selector_audio">Audio selector</string>
+    <string name="sonido_on_off">Sound on/off</string>
+</resources>

@@ -45,12 +45,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import org.apache.commons.lang3.StringUtils;
 
 /*
     Esta clase representa la pantalla de bienvenida.
@@ -128,7 +130,8 @@ public class ActividadInicio extends AppCompatActivity {
             obtenerPuntuaciones(puntuaciones); //Con los permisos concedidos, se muestran las puntuaciones en el TextView.
         } else {
             //Sin la concesión del permiso, se muestra el siguiente mensaje en el TextView.
-            puntuaciones.append("Debe dar permisos de lectura y escritura al Calendario para poder visualizar y registrar nuevas puntuaciones.");
+            String msjPermisos = getString(R.string.msjPermisos);
+            Toast.makeText(ActividadInicio.this, msjPermisos, Toast.LENGTH_SHORT).show();
         }
 
         signInButton = findViewById(R.id.sign_in_button);
@@ -153,7 +156,8 @@ public class ActividadInicio extends AppCompatActivity {
             public void onClick(View view) {
                 mGoogleSignInClient.signOut();
                 signOutButton.setVisibility(View.INVISIBLE);
-                Toast.makeText(ActividadInicio.this, "Se ha cerrado sesión", Toast.LENGTH_SHORT).show();
+                String msjCierreSesion = getString(R.string.msjCierreSesion);
+                Toast.makeText(ActividadInicio.this, msjCierreSesion, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -176,13 +180,15 @@ public class ActividadInicio extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            Toast.makeText(ActividadInicio.this, "Autenticacion correcta", Toast.LENGTH_SHORT).show();
+            String authOk = getString(R.string.authOk);
+            Toast.makeText(ActividadInicio.this, authOk, Toast.LENGTH_SHORT).show();
             firebaseGoogleAuth(account);
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
-            Toast.makeText(ActividadInicio.this, "Autenticacion fallida", Toast.LENGTH_SHORT).show();
+            String authKo = getString(R.string.authKo);
+            Toast.makeText(ActividadInicio.this, authKo, Toast.LENGTH_SHORT).show();
             firebaseGoogleAuth(null);
         }
     }
@@ -195,11 +201,12 @@ public class ActividadInicio extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(ActividadInicio.this, "Éxito", Toast.LENGTH_SHORT).show();
+
+                            //Toast.makeText(ActividadInicio.this, msjBienvenida + " " + givenName + "!", Toast.LENGTH_SHORT).show();
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
                         } else {
-                            Toast.makeText(ActividadInicio.this, "Error", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(ActividadInicio.this, "Error", Toast.LENGTH_SHORT).show();
                             updateUI(null);
                         }
                     }
@@ -209,9 +216,10 @@ public class ActividadInicio extends AppCompatActivity {
     private void updateUI(FirebaseUser user) {
         signOutButton.setVisibility(View.VISIBLE);
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
+        String msjBienvenida = getString(R.string.msjBienvenida);
         if (account != null) {
             givenName = account.getGivenName();
-            Toast.makeText(ActividadInicio.this, givenName, Toast.LENGTH_SHORT).show();
+            Toast.makeText(ActividadInicio.this, msjBienvenida + " " + givenName, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -321,7 +329,15 @@ public class ActividadInicio extends AppCompatActivity {
                     }
                 }
                 for (Puntuacion p : puntos) {
-                    puntuaciones.append(p.getNivel() + "     " + String.format("%-11s", p.getNombre()) + String.format("%10.2f", p.getTiempo()).replace(".", ",") + "\n");
+                    String myString = NumberFormat.getInstance().format(p.getTiempo());
+                    String nombre;
+                    String paddedString = StringUtils.leftPad(myString, 10, " ");
+                    if (p.getNombre().equals(" ")) {
+                        nombre = getString(R.string.anonimo);
+                    } else {
+                        nombre = p.getNombre();
+                    }
+                    puntuaciones.append(p.getNivel() + "     " + String.format("%-11s", nombre) + paddedString+ "\n");
                 }
             }
 

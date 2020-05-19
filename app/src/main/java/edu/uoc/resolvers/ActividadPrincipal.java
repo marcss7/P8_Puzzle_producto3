@@ -23,7 +23,6 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -33,27 +32,21 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
-import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -68,7 +61,6 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     private PuzzleLayout pl;
     private int numCortes = 2;
     private int imagen;
-    //private int imagen = 1;
     private long tInicio, tFin, tDelta;
     private double segTranscurridos;
     private static final int SECOND_ACTIVITY_REQUEST_CODE = 0;
@@ -136,12 +128,11 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 }
                 cursor.close();
             }
-            // Seleccionamos una de esas imágenes de manera aleatoria
-            //imagen = seleccionarImagenAleatoria(imagenesDisponibles);
         }
 
         pl = findViewById(R.id.tablero_juego);
 
+        // Seleccionamos una de esas imágenes de manera aleatoria
         imagen = seleccionarImagenAleatoria();
 
         // Establecemos la imagen seleccionada como puzzle
@@ -188,7 +179,7 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 if (ActividadInicio.givenName != null) {
                     puntuacion.setNombre(ActividadInicio.givenName);
                 } else {
-                    puntuacion.setNombre("Anónimo");
+                    puntuacion.setNombre(" ");
                 }
 
                 puntuacion.setNivel(numCortes - 1);
@@ -197,7 +188,9 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 ref.child(String.valueOf(maxId + 1)).setValue(puntuacion);
 
                 // Mostramos mensaje al completar puzzle
-                Toast.makeText(ActividadPrincipal.this, "¡Bravo! Tu tiempo " + String.format("%.2f", segTranscurridos).replace(".", ",") + "s", Toast.LENGTH_SHORT).show();
+                String bravo = getString(R.string.bravo);
+                String myString = NumberFormat.getInstance().format(segTranscurridos);
+                Toast.makeText(ActividadPrincipal.this, bravo + " " + myString + "s", Toast.LENGTH_SHORT).show();
 
                 // Esperamos 3 segundos para cargar el siguiente puzzle
                 pl.postDelayed(ActividadPrincipal.this, 3000);
@@ -351,10 +344,11 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
             ContentResolver cr = getContentResolver();
             ContentValues values = new ContentValues();
 
+            String myString = NumberFormat.getInstance().format(tiempo);
             values.put(CalendarContract.Events.DTSTART, fecha_record);
             values.put(CalendarContract.Events.DTEND, fecha_record);
             values.put(CalendarContract.Events.TITLE, "TR - ¡Nuevo récord N" + nivel + "!");
-            values.put(CalendarContract.Events.DESCRIPTION, String.format("%.2f", tiempo).replace(".", ","));
+            values.put(CalendarContract.Events.DESCRIPTION, myString);
             values.put(CalendarContract.Events.CALENDAR_ID, 3);
             values.put(CalendarContract.Events.EVENT_TIMEZONE, "Confinado");
 
@@ -368,10 +362,11 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
             // Envía notificación
             crearCanalNotificacion();
 
+            String record = getString(R.string.record);
             NotificationCompat.Builder builder = new NotificationCompat.Builder(ActividadPrincipal.this, "CHANNEL_NEW_RECORD")
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentTitle("The Resolvers")
-                    .setContentText("¡Enhorabuena, has batido un nuevo récord! " + String.format("%.2f", tiempo).replace(".", ",") + "s");
+                    .setContentText(record + myString + "s");
 
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ActividadPrincipal.this);
 

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TheResolvers</string>
+    <string name="exito">Has guanyat!</string>
+    <string name="reiniciar">Comencem de nou?</string>
+    <string name="salir">Sortir</string>
+    <string name="comenzar">Començar</string>
+    <string name="ok">Ok</string>
+    <string name="aceptas_el_reto">Acceptes el repte?</string>
+    <string name="titulo">TheResolvers</string>
+    <string name="url_ayuda">file:///android_asset/Ayuda.html</string>
+    <string name="cabecera_puntos">Nivel Jugador \u0020\u0020Millor t(s)</string>
+    <string name="channel_name">Superar récord</string>
+    <string name="channel_description">Canal utilizado para enviar notificaciones cuando se rompen récords.</string>
+    <string name="msjPermisos">Ha de donar permisos</string>
+    <string name="msjCierreSesion">S\'ha tancat la sessió</string>
+    <string name="msjBienvenida">Benvinguts</string>
+    <string name="authOk">Autenticació correcta</string>
+    <string name="authKo">Autenticació fallida</string>
+    <string name="anonimo">Anònim</string>
+    <string name="bravo">Bravo! El teu temps</string>
+    <string name="record">Enhorabona, has batut un nou rècord!</string>
+    <string name="ayuda">Ajuda</string>
+    <string name="camara">Càmera</string>
+    <string name="selector_audio">Selector àudio</string>
+    <string name="sonido_on_off">So on / off</string>
+</resources>

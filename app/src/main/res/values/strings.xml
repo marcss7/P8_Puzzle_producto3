@@ -11,4 +11,16 @@
     <string name="cabecera_puntos">Nivel Jugador \u0020\u0020\u0020Mejor t(s)</string>
     <string name="channel_name">Superar récord</string>
     <string name="channel_description">Canal utilizado para enviar notificaciones cuando se rompen récords.</string>
+    <string name="msjPermisos">Debe dar  permisos</string>
+    <string name="msjCierreSesion">Se ha cerrado la sesión</string>
+    <string name="authOk">Autenticacion correcta</string>
+    <string name="authKo">Autenticacion fallida</string>
+    <string name="msjBienvenida">¡Bienvenid@</string>
+    <string name="anonimo">Anónimo</string>
+    <string name="bravo">¡Bravo! Tu tiempo </string>
+    <string name="record">¡Enhorabuena, has batido un nuevo récord! </string>
+    <string name="ayuda">Ayuda</string>
+    <string name="camara">Cámara</string>
+    <string name="selector_audio">Selector audio</string>
+    <string name="sonido_on_off">Sonido on/off</string>
 </resources>
