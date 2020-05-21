@@ -8,18 +8,13 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.provider.CalendarContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -43,15 +38,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 
 /*
@@ -70,7 +63,7 @@ public class ActividadInicio extends AppCompatActivity {
     public static String givenName;
     private DatabaseReference ref;
     private TextView puntuaciones;
-    private ArrayList<Puntuacion> puntos = new ArrayList<>();
+    private Map<Integer, Puntuacion> puntos = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +94,7 @@ public class ActividadInicio extends AppCompatActivity {
                 }
             }
         });
+
         mHomeWatcher.startWatch();
 
         // Solicitamos los permisos de escritura y lectura en el Calendario.
@@ -109,20 +103,19 @@ public class ActividadInicio extends AppCompatActivity {
         // Creamos el botón de inicio
         Button botonInicio = findViewById(R.id.botonInicio);
 
-            botonInicio.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        abrirActividadPrincipal();
-                    } catch (Exception e) {
-                        Log.e("Inicio", e.getMessage());
-                    }
-
+        botonInicio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    abrirActividadPrincipal();
+                } catch (Exception e) {
+                    Log.e("Inicio", e.getMessage());
                 }
-            });
 
+            }
+        });
 
-        // Creamos las puntuaciones
+        // Creamos la vista de las puntuaciones
         puntuaciones = findViewById(R.id.puntuaciones);
 
         // Comprobamos si se han concedido los permisos de lectura y escritura en el Calendario.
@@ -134,24 +127,26 @@ public class ActividadInicio extends AppCompatActivity {
             Toast.makeText(ActividadInicio.this, msjPermisos, Toast.LENGTH_SHORT).show();
         }
 
+        // Creamos los botones de inicio y fin de sesión
         signInButton = findViewById(R.id.sign_in_button);
-        mAuth = FirebaseAuth.getInstance();
         signOutButton = findViewById(R.id.sign_out_button);
 
-        // Configure Google Sign In
+        // Configuramos el inicio de sesión en Google
+        mAuth = FirebaseAuth.getInstance();
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-        signInButton.setOnClickListener(new View.OnClickListener(){
+        signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 signIn();
             }
         });
 
-        signOutButton.setOnClickListener(new View.OnClickListener(){
+        signOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mGoogleSignInClient.signOut();
@@ -163,6 +158,7 @@ public class ActividadInicio extends AppCompatActivity {
 
     }
 
+    // Esté método crea el intento de inicio de sesión
     private void signIn() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
@@ -177,6 +173,7 @@ public class ActividadInicio extends AppCompatActivity {
         }
     }
 
+    // Este método controla el resultado del inicio de sesión e informa al usuario
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
@@ -184,8 +181,6 @@ public class ActividadInicio extends AppCompatActivity {
             Toast.makeText(ActividadInicio.this, authOk, Toast.LENGTH_SHORT).show();
             firebaseGoogleAuth(account);
         } catch (ApiException e) {
-            // The ApiException status code indicates the detailed failure reason.
-            // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
             String authKo = getString(R.string.authKo);
             Toast.makeText(ActividadInicio.this, authKo, Toast.LENGTH_SHORT).show();
@@ -193,33 +188,31 @@ public class ActividadInicio extends AppCompatActivity {
         }
     }
 
-    private void firebaseGoogleAuth (GoogleSignInAccount account) {
-
+    // Este método gestiona las credenciales de acceso del usuario a Firebase
+    private void firebaseGoogleAuth(GoogleSignInAccount account) {
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-
-                            //Toast.makeText(ActividadInicio.this, msjBienvenida + " " + givenName + "!", Toast.LENGTH_SHORT).show();
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
                         } else {
-                            //Toast.makeText(ActividadInicio.this, "Error", Toast.LENGTH_SHORT).show();
                             updateUI(null);
                         }
                     }
                 });
     }
 
+    // Este método muestra un mensaje de bienvenida al usurio cuando inicia sesión
     private void updateUI(FirebaseUser user) {
         signOutButton.setVisibility(View.VISIBLE);
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
         String msjBienvenida = getString(R.string.msjBienvenida);
         if (account != null) {
             givenName = account.getGivenName();
-            Toast.makeText(ActividadInicio.this, msjBienvenida + " " + givenName, Toast.LENGTH_SHORT).show();
+            Toast.makeText(ActividadInicio.this, msjBienvenida + " " + givenName + "!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -296,48 +289,40 @@ public class ActividadInicio extends AppCompatActivity {
     // para cada nivel de las persistidas en la base de datos de Firebase.
     private void obtenerPuntuaciones(final TextView puntuaciones) {
         puntuaciones.append("");
+        puntos.clear();
 
         ref = FirebaseDatabase.getInstance().getReference();
-        ref.child("Records").addValueEventListener(new ValueEventListener() {
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                puntos.clear();
-                int i;
-                double minTime = Double.MAX_VALUE;
-                for (i = 0; i < 5; i++) {
-                    Iterator<DataSnapshot> items = dataSnapshot.getChildren().iterator();
-                    String minName = null;
-                    String minDate = null;
-                    minTime = Double.MAX_VALUE;
-                    while (items.hasNext()) {
-                        DataSnapshot item = items.next();
-                        String nombre = item.child("nombre").getValue().toString();
-                        String fecha = item.child("fecha").getValue().toString();
-                        double tiempo = Double.parseDouble(item.child("tiempo").getValue().toString());
-                        int nivel = Integer.parseInt(item.child("nivel").getValue().toString());
-                        if (nivel == i + 1) {
-                            if (tiempo < minTime) {
-                                minTime = tiempo;
-                                minName = nombre;
-                                minDate = fecha;
+                for (int i = 1; i <= 5; i++) {
+                    Query query = ref.child("Records/" + i).orderByChild("tiempo").limitToFirst(1);
+
+                    int finalI = i;
+                    query.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                    Puntuacion p = snapshot.getValue(Puntuacion.class);
+                                    String myString = NumberFormat.getInstance().format(p.getTiempo());
+                                    String nombre;
+                                    String paddedString = StringUtils.leftPad(myString, 10, " ");
+                                    if (p.getNombre().equals(" ")) {
+                                        nombre = getString(R.string.anonimo);
+                                    } else {
+                                        nombre = p.getNombre();
+                                    }
+                                    puntuaciones.append(dataSnapshot.getKey() + "     " + String.format("%-11s", nombre) + paddedString + "\n");
+                                }
                             }
                         }
-                    }
-                    Puntuacion p = new Puntuacion(minName, i + 1, minDate, minTime);
-                    if (minName != null) {
-                        puntos.add(p);
-                    }
-                }
-                for (Puntuacion p : puntos) {
-                    String myString = NumberFormat.getInstance().format(p.getTiempo());
-                    String nombre;
-                    String paddedString = StringUtils.leftPad(myString, 10, " ");
-                    if (p.getNombre().equals(" ")) {
-                        nombre = getString(R.string.anonimo);
-                    } else {
-                        nombre = p.getNombre();
-                    }
-                    puntuaciones.append(p.getNivel() + "     " + String.format("%-11s", nombre) + paddedString+ "\n");
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
                 }
             }
 

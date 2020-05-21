@@ -1,20 +1,19 @@
 package edu.uoc.resolvers;
 
-import java.util.Date;
-
+/*
+    Esta clase representa cada una de las puntuaciones que se obtienen en el juego.
+ */
 public class Puntuacion {
 
     private String nombre;
-    private int nivel;
     private String fecha;
     private double tiempo;
 
     public Puntuacion() {
     }
 
-    public Puntuacion(String nombre, int nivel, String fecha, double tiempo) {
+    public Puntuacion(String nombre, String fecha, double tiempo) {
         this.nombre = nombre;
-        this.nivel = nivel;
         this.fecha = fecha;
         this.tiempo = tiempo;
     }
@@ -25,14 +24,6 @@ public class Puntuacion {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
-    }
-
-    public int getNivel() {
-        return nivel;
-    }
-
-    public void setNivel(int nivel) {
-        this.nivel = nivel;
     }
 
     public String getFecha() {

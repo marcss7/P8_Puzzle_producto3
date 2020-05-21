@@ -21,7 +21,8 @@
     <string name="bravo">Hurray! Your time </string>
     <string name="record">Congratulations, you have set a new record!</string>
     <string name="ayuda">Help</string>
-    <string name="camara">Camera</string>
     <string name="selector_audio">Audio selector</string>
     <string name="sonido_on_off">Sound on/off</string>
+    <string name="confinado">Confined</string>
+    <string name="nuevo_record">TR - New record N</string>
 </resources>

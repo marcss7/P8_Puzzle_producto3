@@ -70,14 +70,9 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     public static final String Broadcast_PLAY_NEW_AUDIO = "edu.uoc.resolvers";
     private boolean isChecked = false;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
-    private ArrayList<Integer> imagenesDisponibles = new ArrayList<>();
     private ArrayList<Integer> imagenesUsadas = new ArrayList<>();
-    private Integer REQUEST_CAMERA = 1;
-    File archivoFoto;
-    Uri imagenUri = null;
     DatabaseReference ref;
     private Puntuacion puntuacion;
-    private long maxId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,27 +104,6 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
         });
         mHomeWatcher.startWatch();
 
-        // Solicitamos permisos para que la app pueda usar la cámara
-        if (Build.VERSION.SDK_INT >= 23) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 2);
-        }
-
-        // Obtenemos las imágenes a usar en el juego de las almacenadas en el dispositivo del usuario
-        if (checkPermissionREAD_EXTERNAL_STORAGE(this)) {
-            ContentResolver cr = getApplicationContext().getContentResolver();
-            String[] projection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
-
-            Cursor cursor = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null, null, null);
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    String id = cursor.getString(cursor.getColumnIndex(MediaStore.Images.ImageColumns._ID));
-                    Uri path = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(id));
-                    imagenesDisponibles.add(Integer.parseInt(id));
-                }
-                cursor.close();
-            }
-        }
-
         pl = findViewById(R.id.tablero_juego);
 
         // Seleccionamos una de esas imágenes de manera aleatoria
@@ -146,19 +120,9 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
         tInicio = System.currentTimeMillis();
 
         puntuacion = new Puntuacion();
+
+        // Obtenemos referencia a la BBDD de Firebase
         ref = FirebaseDatabase.getInstance().getReference().child("Records");
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists())
-                    maxId = (dataSnapshot.getChildrenCount());
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
 
         // Cuando se completa el puzzle
         pl.setOnCompleteCallback(new PuzzleLayout.OnCompleteCallback() {
@@ -182,10 +146,9 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                     puntuacion.setNombre(" ");
                 }
 
-                puntuacion.setNivel(numCortes - 1);
                 puntuacion.setTiempo(segTranscurridos);
                 puntuacion.setFecha(strDate);
-                ref.child(String.valueOf(maxId + 1)).setValue(puntuacion);
+                ref.child(String.valueOf(numCortes - 1)).push().setValue(puntuacion);
 
                 // Mostramos mensaje al completar puzzle
                 String bravo = getString(R.string.bravo);
@@ -321,8 +284,8 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     }
 
     // Esté método selecciona aleatoriamente una imagen de entre
-    // las que el usuario tiene almacenadas en el dispositivo y
-    // comprueba que no se haya seleccionado previamente en esa partida.
+    // el número de las que hay almacenadas en Firebase y comprueba
+    // que no se haya seleccionado previamente en esa partida.
     private int seleccionarImagenAleatoria() {
         Random rand = new Random();
         int imagen = rand.nextInt(5) + 1;
@@ -347,10 +310,10 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
             String myString = NumberFormat.getInstance().format(tiempo);
             values.put(CalendarContract.Events.DTSTART, fecha_record);
             values.put(CalendarContract.Events.DTEND, fecha_record);
-            values.put(CalendarContract.Events.TITLE, "TR - ¡Nuevo récord N" + nivel + "!");
+            values.put(CalendarContract.Events.TITLE, getString(R.string.nuevo_record) + nivel + "!");
             values.put(CalendarContract.Events.DESCRIPTION, myString);
             values.put(CalendarContract.Events.CALENDAR_ID, 3);
-            values.put(CalendarContract.Events.EVENT_TIMEZONE, "Confinado");
+            values.put(CalendarContract.Events.EVENT_TIMEZONE, getString(R.string.confinado));
 
             // Comprobamos si tenemos permisos de acceso al calendario
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
@@ -366,7 +329,7 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(ActividadPrincipal.this, "CHANNEL_NEW_RECORD")
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentTitle("The Resolvers")
-                    .setContentText(record + myString + "s");
+                    .setContentText(record + " " + myString + "s");
 
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ActividadPrincipal.this);
 
@@ -447,31 +410,6 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 Intent ayuda = new Intent(this, ActividadAyuda.class);
                 startActivity(ayuda);
                 return true;
-            case R.id.camara:
-                // Se abre la funcionalidad de la cámara
-                mServ.pauseMusic(); // Pausamos la música mientras se hace la foto
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Images.Media.TITLE, "Foto puzzle");
-                values.put(MediaStore.Images.Media.DESCRIPTION, "The Resolvers");
-
-                Intent intentoFoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-                // Nos aseguramos que se ha abierto la actividad de la cámara
-                if (intentoFoto.resolveActivity(getPackageManager()) != null) {
-                    // Creamos el archivo donde irá la imagen
-                    try {
-                        archivoFoto = crearArchivoImagen();
-                    } catch (IOException ex) {
-                        // Ha ocurrido un error al crear el archivo
-                    }
-
-                    if (archivoFoto != null) {
-                        imagenUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-                        intentoFoto.putExtra(MediaStore.EXTRA_OUTPUT, imagenUri);
-                        startActivityForResult(intentoFoto, REQUEST_CAMERA);
-                    }
-                }
-                return true;
             case R.id.selector_musica:
                 // Se abre el selector de música
                 buscarPistaAudio();
@@ -490,19 +428,6 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    // Este método crea el archivo en el que se guarda la foto que tomamamos con la cámara
-    private File crearArchivoImagen() throws IOException {
-        // Creamos un nombre para el archivo
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String nombreArchivoImagen = "JPEG_" + timeStamp + "_";
-        File directorio = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-        // Creamos el archivo
-        File imagen = File.createTempFile(nombreArchivoImagen,".jpg", directorio);
-
-        return imagen;
     }
 
     // Este método permite acceder al selector de archivos para que podamos elegir un tema de música.
@@ -538,50 +463,13 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                 sendBroadcast(broadcastIntent);
             }
 
-        } else if (requestCode == REQUEST_CAMERA && resultCode == RESULT_OK) {
-            // Sustituimos la imagen del puzzle por la foto hecha con la cámara
-            Bitmap foto = null;
-
-            try {
-                foto = MediaStore.Images.Media.getBitmap(getContentResolver(), imagenUri);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            // Obtenemos el id de la foto tomada con la cámara
-            imagen = obtenerIdUltimaImagen();
-            imagenesUsadas.add(imagen);
-            try {
-                pl.establecerImagen(imagen, numCortes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            mServ.resumeMusic();
         }
-    }
-
-    // Este método permite obtener el id de la última imagen tomada con la cámara
-    private int obtenerIdUltimaImagen() {
-        final String[] imageColumns = {MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
-        final String imageOrderBy = MediaStore.Images.Media._ID + " DESC";
-        Cursor imageCursor = getApplicationContext().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, imageColumns, null, null, imageOrderBy);
-
-        if (imageCursor.moveToFirst()) {
-            int id = imageCursor.getInt(imageCursor.getColumnIndex(MediaStore.Images.Media._ID));
-            imageCursor.close();
-            return id;
-        } else {
-            return 0;
-        }
-
     }
 
     @Override
     public void run() {
         numCortes++;
         imagen = seleccionarImagenAleatoria();
-        //imagen++;
 
         // Si llegamos al último puzzle muestra el dialogo del fin del juego
         // Si no carga el siguiente puzzle
@@ -608,7 +496,6 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
                                 numCortes = 2;
                                 imagenesUsadas.clear();
                                 imagen = seleccionarImagenAleatoria();
-                                //imagen = 1;
                                 try {
                                     pl.establecerImagen(imagen, numCortes);
                                 } catch (IOException e) {

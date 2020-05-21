@@ -21,7 +21,8 @@
     <string name="bravo">Bravo! El teu temps</string>
     <string name="record">Enhorabona, has batut un nou rècord!</string>
     <string name="ayuda">Ajuda</string>
-    <string name="camara">Càmera</string>
     <string name="selector_audio">Selector àudio</string>
     <string name="sonido_on_off">So on / off</string>
+    <string name="confinado">Confinat</string>
+    <string name="nuevo_record">TR - Nou record N</string>
 </resources>

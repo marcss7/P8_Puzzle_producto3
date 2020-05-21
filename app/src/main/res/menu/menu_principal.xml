@@ -4,9 +4,6 @@
     <item android:id="@+id/ayuda"
         android:title="@string/ayuda"
         app:showAsAction="never" />
-    <item android:id="@+id/camara"
-        android:title="@string/camara"
-        app:showAsAction="never" />
     <item android:id="@+id/selector_musica"
         android:title="@string/selector_audio"
         app:showAsAction="never" />
