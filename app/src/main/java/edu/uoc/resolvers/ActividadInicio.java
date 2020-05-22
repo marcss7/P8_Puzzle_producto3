@@ -305,9 +305,9 @@ public class ActividadInicio extends AppCompatActivity {
                             if (dataSnapshot.exists()) {
                                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                                     Puntuacion p = snapshot.getValue(Puntuacion.class);
-                                    String myString = NumberFormat.getInstance().format(p.getTiempo());
+                                    String numFormat = NumberFormat.getInstance().format(p.getTiempo());
                                     String nombre;
-                                    String paddedString = StringUtils.leftPad(myString, 10, " ");
+                                    String paddedString = StringUtils.leftPad(numFormat, 10, " ");
                                     if (p.getNombre().equals(" ")) {
                                         nombre = getString(R.string.anonimo);
                                     } else {

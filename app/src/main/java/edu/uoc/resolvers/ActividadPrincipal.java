@@ -22,33 +22,21 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.CalendarContract;
-import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.ListResult;
-import com.google.firebase.storage.StorageReference;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -69,7 +57,7 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
     private long tInicio, tFin, tDelta;
     private double segTranscurridos;
     private static final int SECOND_ACTIVITY_REQUEST_CODE = 0;
-    private static final int NIVELES = 2;
+    private static final int NIVELES = 5;
     private static final int NUM_IMAGENES = 9;
     HomeWatcher mHomeWatcher;
     private static final int READ_REQUEST_CODE = 42;
@@ -158,8 +146,8 @@ public class ActividadPrincipal extends AppCompatActivity implements Runnable {
 
                 // Mostramos mensaje al completar puzzle
                 String bravo = getString(R.string.bravo);
-                String myString = NumberFormat.getInstance().format(segTranscurridos);
-                Toast.makeText(ActividadPrincipal.this, bravo + " " + myString + "s", Toast.LENGTH_SHORT).show();
+                String numFormat = NumberFormat.getInstance().format(segTranscurridos);
+                Toast.makeText(ActividadPrincipal.this, bravo + " " + numFormat + "s", Toast.LENGTH_SHORT).show();
 
                 // Esperamos 3 segundos para cargar el siguiente puzzle
                 pl.postDelayed(ActividadPrincipal.this, 3000);
