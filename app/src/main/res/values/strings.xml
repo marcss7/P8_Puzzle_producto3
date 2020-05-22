@@ -24,4 +24,5 @@
     <string name="sonido_on_off">Sonido on/off</string>
     <string name="confinado">Confinado</string>
     <string name="nuevo_record">TR - ¡Nuevo récord N</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
 </resources>

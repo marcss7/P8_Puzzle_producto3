@@ -25,4 +25,5 @@
     <string name="sonido_on_off">Sound on/off</string>
     <string name="confinado">Confined</string>
     <string name="nuevo_record">TR - New record N</string>
+    <string name="cerrar_sesion">Sign out</string>
 </resources>
