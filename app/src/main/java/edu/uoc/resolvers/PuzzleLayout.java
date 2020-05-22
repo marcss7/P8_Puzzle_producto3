@@ -1,22 +1,15 @@
 package edu.uoc.resolvers;
 
-import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.net.Uri;
 import android.os.Build;
-import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,27 +21,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.customview.widget.ViewDragHelper;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
-import java.util.concurrent.Executor;
 
 /*
     Esta clase nos permite especificar como se posicionan unas piezas
@@ -65,11 +45,9 @@ public class PuzzleLayout extends RelativeLayout {
     private int anchuraPieza;
     private int alturaPieza;
     private OnCompleteCallback occ;
-    FirebaseStorage firebaseStorage;
     StorageReference storageReference;
     StorageReference imageRef;
     Bitmap my_image;
-    File localFile;
 
     public PuzzleLayout(Context context) {
         super(context);
@@ -117,7 +95,7 @@ public class PuzzleLayout extends RelativeLayout {
                 alturaImagen = getHeight();
                 anchuraImagen = getWidth();
                 getViewTreeObserver().removeOnPreDrawListener(this);
-                if(idImagen != 0 && numCortes != 0){
+                if (idImagen != 0 && numCortes != 0) {
                     try {
                         crearPiezas();
                     } catch (IOException e) {
@@ -150,17 +128,17 @@ public class PuzzleLayout extends RelativeLayout {
                 int bordeDerecho = izquierdaPieza + anchuraPieza;
                 int direction = ph.obtenerPosicionDesplazamiento(indice);
 
-                switch (direction){
+                switch (direction) {
                     case PuzzleHelper.IZQUIERDA:
-                        if(izquierda <= bordeIzquierdo)
+                        if (izquierda <= bordeIzquierdo)
                             return bordeIzquierdo;
-                        else if(izquierda >= izquierdaPieza)
+                        else if (izquierda >= izquierdaPieza)
                             return izquierdaPieza;
                         else
                             return izquierda;
 
                     case PuzzleHelper.DERECHA:
-                        if(izquierda >= bordeDerecho)
+                        if (izquierda >= bordeDerecho)
                             return bordeDerecho;
                         else if (izquierda <= izquierdaPieza)
                             return izquierdaPieza;
@@ -185,14 +163,14 @@ public class PuzzleLayout extends RelativeLayout {
 
                 switch (direccion) {
                     case PuzzleHelper.ARRIBA:
-                        if(arriba <= bordeSuperior)
+                        if (arriba <= bordeSuperior)
                             return bordeSuperior;
                         else if (arriba >= arribaPieza)
                             return arribaPieza;
                         else
                             return arriba;
                     case PuzzleHelper.ABAJO:
-                        if(arriba >= bordeInferior)
+                        if (arriba >= bordeInferior)
                             return bordeInferior;
                         else if (arriba <= arribaPieza)
                             return arribaPieza;
@@ -208,7 +186,7 @@ public class PuzzleLayout extends RelativeLayout {
             public void onViewReleased(View releasedChild, float xvel, float yvel) {
                 int indice = indexOfChild(releasedChild);
                 boolean estaCompleto = ph.intercambiarPosicionConPiezaVacia(indice);
-                Pieza pieza =  ph.obtenerPieza(indice);
+                Pieza pieza = ph.obtenerPieza(indice);
                 vdh.settleCapturedViewAt(pieza.phorizontal * anchuraPieza, pieza.pvertical * alturaPieza);
                 View piezaVacia = getChildAt(0);
                 ViewGroup.LayoutParams lp = piezaVacia.getLayoutParams();
@@ -220,7 +198,7 @@ public class PuzzleLayout extends RelativeLayout {
                 // Se reproduce el sonido de deslizamiento de la pieza
                 soundPool.play(deslizar, 1, 1, 1, 0, 1);
 
-                if(estaCompleto){
+                if (estaCompleto) {
                     piezaVacia.setVisibility(VISIBLE);
                     // Se reproduce el sonido de finalización del puzzle
                     soundPool.play(exito, 1, 1, 1, 0, 1);
@@ -243,7 +221,7 @@ public class PuzzleLayout extends RelativeLayout {
 
     @Override
     public void computeScroll() {
-        if(vdh.continueSettling(true)) {
+        if (vdh.continueSettling(true)) {
             invalidate();
         }
     }
@@ -254,7 +232,7 @@ public class PuzzleLayout extends RelativeLayout {
         this.numCortes = numCortes;
         this.idImagen = idImagen;
 
-        if(anchuraImagen != 0 && alturaImagen != 0){
+        if (anchuraImagen != 0 && alturaImagen != 0) {
             crearPiezas();
         }
     }
@@ -271,50 +249,44 @@ public class PuzzleLayout extends RelativeLayout {
         storageReference = FirebaseStorage.getInstance().getReference();
         imageRef = storageReference.child("img_0" + idImagen + ".jpg");
 
+        final File localFile = File.createTempFile("Images", "jpg");
+        FileDownloadTask task = imageRef.getFile(localFile);
+        task.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                my_image = BitmapFactory.decodeFile(localFile.getAbsolutePath());
 
-                final File localFile = File.createTempFile("Images", "jpg");
-                FileDownloadTask task = imageRef.getFile(localFile);
-                task.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                        my_image = BitmapFactory.decodeFile(localFile.getAbsolutePath());
+                Bitmap bitmap = escalarImagen(my_image, anchuraImagen, alturaImagen);
+                my_image.recycle();
 
-                        // Obtenemos la imagen en función de su id de los recursos externos
-                        //ContentResolver cr = this.getContext().getContentResolver();
-                        //Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(idImagen));
-                        //Bitmap resource = MediaStore.Images.Media.getBitmap(cr, imageUri);
+                anchuraPieza = anchuraImagen / numCortes;
+                alturaPieza = alturaImagen / numCortes;
 
-                        Bitmap bitmap = escalarImagen(my_image, anchuraImagen, alturaImagen);
-                        my_image.recycle();
-
-                        anchuraPieza = anchuraImagen / numCortes;
-                        alturaPieza = alturaImagen / numCortes;
-
-                        for (int i = 0; i < numCortes; i++) {
-                            for (int j = 0; j < numCortes; j++) {
-                                ImageView iv = new ImageView(getContext());
-                                iv.setScaleType(ImageView.ScaleType.FIT_XY);
-                                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                lp.leftMargin = j * anchuraPieza;
-                                lp.topMargin = i * alturaPieza;
-                                iv.setLayoutParams(lp);
-                                Bitmap b = Bitmap.createBitmap(bitmap, lp.leftMargin, lp.topMargin, anchuraPieza, alturaPieza);
-                                iv.setImageBitmap(b);
-                                addView(iv);
-                            }
-                        }
-                        desordenarPiezas();
+                for (int i = 0; i < numCortes; i++) {
+                    for (int j = 0; j < numCortes; j++) {
+                        ImageView iv = new ImageView(getContext());
+                        iv.setScaleType(ImageView.ScaleType.FIT_XY);
+                        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                        lp.leftMargin = j * anchuraPieza;
+                        lp.topMargin = i * alturaPieza;
+                        iv.setLayoutParams(lp);
+                        Bitmap b = Bitmap.createBitmap(bitmap, lp.leftMargin, lp.topMargin, anchuraPieza, alturaPieza);
+                        iv.setImageBitmap(b);
+                        addView(iv);
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getContext(), "Descarga fallida", Toast.LENGTH_LONG).show();
-                    }
-                });
+                }
+                desordenarPiezas();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getContext(), "Descarga fallida", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     // Este método escala la imagen para adaptarla a la pantalla.
-    private Bitmap escalarImagen(Bitmap bm, int nuevaAnchura , int nuevaAltura) {
+    private Bitmap escalarImagen(Bitmap bm, int nuevaAnchura, int nuevaAltura) {
         int ancho = bm.getWidth();
         int alto = bm.getHeight();
         float escaladoAncho = ((float) nuevaAnchura) / ancho;
@@ -330,7 +302,7 @@ public class PuzzleLayout extends RelativeLayout {
         View piezaVacia = getChildAt(0);
         View vistaVecina;
 
-        for (int i = 0; i < num; i ++) {
+        for (int i = 0; i < num; i++) {
             int posicionVecina = ph.encontrarIndiceVecinoPiezaVacia();
             ViewGroup.LayoutParams lpPiezaVacia = piezaVacia.getLayoutParams();
             vistaVecina = getChildAt(posicionVecina);
